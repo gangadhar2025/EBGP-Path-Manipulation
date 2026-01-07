@@ -1,0 +1,276 @@
+Router 1
+
+conf t
+int g0/0
+ip add 192.168.12.1 255.255.255.0
+no shut
+!
+int g1/0
+ip add 192.168.13.1 255.255.255.0
+no shut
+!
+int g2/0
+ip add 192.168.16.1 255.255.255.0
+no shut
+!
+int lo0
+ip add 1.1.1.1 255.255.255.255
+!
+ex
+
+Router-2
+
+conf t
+int g0/0
+ip add 192.168.12.2 255.255.255.0
+no shut
+!
+int g1/0
+ip add 192.168.24.2 255.255.255.0
+no shut
+!
+int g2/0
+ip add 192.168.27.2 255.255.255.0
+no shut
+!
+int lo0
+ip add 2.2.2.2 255.255.255.255
+!
+ex
+
+Router-3
+
+conf t
+int g1/0
+ip add 192.168.13.3 255.255.255.0
+no shut
+!
+int g2/0
+ip add 192.168.35.3 255.255.255.0
+no shut
+!
+int lo0
+ip add 3.3.3.3 255.255.255.255
+!
+ex
+
+Router-4
+
+conf t
+int g1/0
+ip add 192.168.24.4 255.255.255.0
+no shut
+!
+int g3/0
+ip add 192.168.45.4 255.255.255.0
+no shut
+!
+int lo0
+ip add 4.4.4.4 255.255.255.255
+!
+ex
+
+Router-5
+
+conf t
+int g3/0
+ip add 192.168.45.5 255.255.255.0
+no shut
+!
+int g2/0
+ip add 192.168.35.5 255.255.255.0
+no shut
+!
+int lo0
+ip add 5.5.5.5 255.255.255.255
+!
+ex
+
+Router-6
+
+conf t
+int g2/0
+ip add 192.168.16.6 255.255.255.0
+no shut
+!
+int g0/0
+ip add 192.168.67.6 255.255.255.0
+no shut
+!
+int lo0
+ip add 6.6.6.6 255.255.255.255
+!
+int e5/0
+ip add 192.168.2.1 255.255.255.0
+no shut
+!
+ex
+
+Router-7
+
+conf t
+int g2/0
+ip add 192.168.27.7 255.255.255.0
+no shut
+!
+int g0/0
+ip add 192.168.67.7 255.255.255.0
+no shut
+!
+int lo0
+ip add 7.7.7.7 255.255.255.255
+!
+int e5/0
+ip add 192.168.1.1 255.255.255.0
+no shut
+!
+ex
+
+Protocols Configuration
+
+Router-1
+
+router ospf 10
+network 192.168.12.0 0.0.0.255 area 0
+network 192.168.16.0 0.0.0.255 area 0
+network 1.1.1.1 0.0.0.0 area 0
+!
+ex
+router bgp 100
+neighbor ibgp peer-group
+neighbor ibgp remote-as 100
+neighbor ibgp update-source lo0
+!
+neighbor 2.2.2.2 peer-group ibgp
+neighbor 6.6.6.6 peer-group ibgp
+neighbor 7.7.7.7 peer-group ibgp
+neighbor 192.168.13.3 remote-as 200
+!
+redistribute connected
+ex
+route-map lp permit 10
+set local-prefrence 400
+ex
+route-map lp permit 20
+ex
+router bgp 100
+neighbor ibgp route-map lp out
+
+Router-2
+
+router ospf 10
+network 192.168.12.0 0.0.0.255 area 0
+network 192.168.27.0 0.0.0.255 area 0
+network 2.2.2.2 0.0.0.0 area 0
+!
+ex
+router bgp 100
+neighbor ibgp peer-group
+neighbor ibgp remote-as 100
+neighbor ibgp update-source lo0
+neighbor 1.1.1.1 peer-group ibgp
+neighbor 6.6.6.6 peer-group ibgp
+neighbor 7.7.7.7 peer-group ibgp
+neighbor 192.168.24.4 remote-as 300
+!
+redistribute connected
+ex
+route-map as-path permit 10
+set as-path prepend 100 100 100
+!
+ex
+route-map as-path permit 20
+!
+ex
+router bgp 100
+neighbor 192.168.24.4 route-map as-path out
+!
+ex
+
+
+Router-3
+
+router bgp 200
+neighbor 192.168.13.1 remote-as 100
+neighbor 192.168.35.5 remote-as 400
+network 3.3.3.3 mask 255.255.255.255
+!
+ex
+
+Router-4
+
+router bgp 300
+neighbor 192.168.24.2 remote-as 100
+neighbor 192.168.45.5 remote-as 400
+network 4.4.4.4 mask 255.255.255.255
+!
+ex
+
+Router-5
+
+router bgp 400
+neighbor 192.168.35.3 remote-as 200
+neighbor 192.168.45.4 remote-as 300
+network 5.5.5.5 mask 255.255.255.255
+redistribute connected
+!
+ex
+
+Router-6
+
+router ospf 10
+network 192.168.16.0 0.0.0.255 area 0
+network 192.168.67.0 0.0.0.0.255 area 0
+network 6.6.6.6 0.0.0.0 area 0
+!
+ex
+router bgp 100
+neighbor ibgp peer-group
+neighbor ibgp remote-as 100
+neighbor ibgp update-source lo0
+neighbor 1.1.1.1 peer-group ibgp
+neighbor 2.2.2.2 peer-group ibgp
+neighbor 7.7.7.7 peer-group ibgp
+!
+redistribute connected
+ex
+int e5/0
+ip helper-address 192.168.67.7
+
+Router-7
+
+router ospf 10
+network 192.168.27.0 0.0.0.255 area 0
+network 192.168.67.0 0.0.0.255 area 0
+network 7.7.7.7 0.0.0.0 area 0
+!
+ex
+router bgp 100
+neighbor ibgp peer-group
+neighbor ibgp remote-as 100
+neighbor ibgp update-source lo0
+neighbor 1.1.1.1 peer-group ibgp
+neighbor 2.2.2.2 peer-group ibgp
+neighbor 6.6.6.6 peer-group ibgp
+!
+redistribute connected
+!
+ex
+ip dhcp pool lan1
+network 192.168.1.0 255.255.255.0
+default-router 192.168.1.1
+dns-server 192.168.1.254
+ex
+ip dhcp pool lan2
+network 192.168.2.0 255.255.255.0
+default-router 192.168.2.1
+dns-server 192.168.2.254
+ex
+
+
+
+
+
+
+
+
